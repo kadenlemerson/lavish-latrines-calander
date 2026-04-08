@@ -1,0 +1,103 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans text-dark-800 bg-cream-50;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .btn-gold {
+    @apply bg-gold-gradient text-dark-800 font-semibold px-6 py-3 rounded-lg
+           hover:opacity-90 active:scale-[0.98] transition-all duration-150
+           shadow-md hover:shadow-lg;
+  }
+
+  .btn-dark {
+    @apply bg-dark-gradient text-white font-semibold px-6 py-3 rounded-lg
+           hover:opacity-90 active:scale-[0.98] transition-all duration-150
+           shadow-md hover:shadow-lg;
+  }
+
+  .btn-outline {
+    @apply border-2 border-gold-500 text-gold-600 font-semibold px-6 py-3 rounded-lg
+           hover:bg-gold-500 hover:text-dark-800 transition-all duration-150;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-cream-200 p-6;
+  }
+
+  .card-luxury {
+    @apply bg-white rounded-2xl shadow-lg border border-cream-200 overflow-hidden;
+  }
+
+  .gold-rule {
+    @apply w-16 h-1 bg-gold-gradient rounded-full my-4;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 border border-cream-300 rounded-lg
+           focus:outline-none focus:ring-2 focus:ring-gold-400 focus:border-transparent
+           bg-white text-dark-800 placeholder-dark-400
+           transition-all duration-150;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-dark-600 mb-1;
+  }
+
+  .badge-gold {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+           bg-gold-100 text-gold-700;
+  }
+
+  .badge-green {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+           bg-green-100 text-green-700;
+  }
+
+  .badge-red {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+           bg-red-100 text-red-700;
+  }
+
+  .badge-gray {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
+           bg-gray-100 text-gray-600;
+  }
+
+  .section-title {
+    @apply text-3xl font-serif font-bold text-dark-800;
+  }
+
+  .section-subtitle {
+    @apply text-dark-500 text-lg mt-2;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #f5f0e8; }
+::-webkit-scrollbar-thumb { background: #C9A84C; border-radius: 3px; }
+
+/* Gold shimmer animation */
+@keyframes shimmer {
+  0% { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #C9A84C 0%, #f5d987 50%, #C9A84C 100%);
+  background-size: 200% auto;
+  animation: shimmer 3s linear infinite;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
