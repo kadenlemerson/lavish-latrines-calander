@@ -2,13 +2,10 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-const { getDb } = require('./database');
+const { initDb } = require('./database');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Initialize database on startup
-getDb();
 
 // Middleware
 app.use(cors({
@@ -18,17 +15,17 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Static files (invoices, etc.)
+// Static files (invoices)
 app.use('/invoices', express.static(path.join(__dirname, 'invoices')));
 
 // Routes
-app.use('/api/auth', require('./routes/auth'));
-app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/auth',      require('./routes/auth'));
+app.use('/api/bookings',  require('./routes/bookings'));
 app.use('/api/customers', require('./routes/customers'));
-app.use('/api/quotes', require('./routes/quotes'));
-app.use('/api/payments', require('./routes/payments'));
-app.use('/api/revenue', require('./routes/revenue'));
-app.use('/api/users', require('./routes/users'));
+app.use('/api/quotes',    require('./routes/quotes'));
+app.use('/api/payments',  require('./routes/payments'));
+app.use('/api/revenue',   require('./routes/revenue'));
+app.use('/api/users',     require('./routes/users'));
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -43,8 +40,16 @@ if (process.env.NODE_ENV === 'production') {
   });
 }
 
-app.listen(PORT, () => {
-  console.log(`\n🚽 Lavish Latrines API running on port ${PORT}`);
-  console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`   Square Mode: ${process.env.SQUARE_ENVIRONMENT || 'sandbox'}\n`);
-});
+// Initialize database then start server
+initDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`\n🚽 Lavish Latrines API running on port ${PORT}`);
+      console.log(`   Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`   Square Mode: ${process.env.SQUARE_ENVIRONMENT || 'sandbox'}\n`);
+    });
+  })
+  .catch(err => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });
