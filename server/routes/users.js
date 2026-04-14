@@ -5,43 +5,51 @@ const { requireAdmin } = require('../middleware/auth');
 
 const router = express.Router();
 
-// GET /api/users - list all staff (admin only)
-router.get('/', requireAdmin, (req, res) => {
-  const db = getDb();
-  const users = db.prepare('SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC').all();
-  res.json(users);
+// GET /api/users
+router.get('/', requireAdmin, async (req, res) => {
+  try {
+    const db = getDb();
+    const users = await db.all('SELECT id, name, email, role, created_at FROM users ORDER BY created_at DESC', []);
+    res.json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// POST /api/users - create staff account (admin only)
-router.post('/', requireAdmin, (req, res) => {
-  const { name, email, password, role } = req.body;
-  if (!name || !email || !password) {
-    return res.status(400).json({ error: 'Name, email, and password required' });
+// POST /api/users
+router.post('/', requireAdmin, async (req, res) => {
+  try {
+    const { name, email, password, role } = req.body;
+    if (!name || !email || !password) return res.status(400).json({ error: 'Name, email, and password required' });
+
+    const db = getDb();
+    const existing = await db.get('SELECT id FROM users WHERE email = ?', [email.toLowerCase().trim()]);
+    if (existing) return res.status(409).json({ error: 'Email already in use' });
+
+    const hash = bcrypt.hashSync(password, 10);
+    const result = await db.run(
+      'INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
+      [name.trim(), email.toLowerCase().trim(), hash, role === 'admin' ? 'admin' : 'employee']
+    );
+
+    res.status(201).json({ id: result.lastInsertRowid, name, email, role: role || 'employee' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  const db = getDb();
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email.toLowerCase().trim());
-  if (existing) {
-    return res.status(409).json({ error: 'Email already in use' });
-  }
-
-  const hash = bcrypt.hashSync(password, 10);
-  const result = db.prepare(`
-    INSERT INTO users (name, email, password_hash, role)
-    VALUES (?, ?, ?, ?)
-  `).run(name.trim(), email.toLowerCase().trim(), hash, role === 'admin' ? 'admin' : 'employee');
-
-  res.status(201).json({ id: result.lastInsertRowid, name, email, role: role || 'employee' });
 });
 
-// DELETE /api/users/:id (admin only, can't delete yourself)
-router.delete('/:id', requireAdmin, (req, res) => {
-  const db = getDb();
-  if (parseInt(req.params.id) === req.user.id) {
-    return res.status(400).json({ error: 'Cannot delete your own account' });
+// DELETE /api/users/:id
+router.delete('/:id', requireAdmin, async (req, res) => {
+  try {
+    if (parseInt(req.params.id) === req.user.id) {
+      return res.status(400).json({ error: 'Cannot delete your own account' });
+    }
+    const db = getDb();
+    await db.run('DELETE FROM users WHERE id = ?', [req.params.id]);
+    res.json({ message: 'User deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-  db.prepare('DELETE FROM users WHERE id = ?').run(req.params.id);
-  res.json({ message: 'User deleted' });
 });
 
 module.exports = router;

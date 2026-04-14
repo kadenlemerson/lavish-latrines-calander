@@ -5,85 +5,97 @@ const { sendQuoteConfirmation } = require('../utils/email');
 
 const router = express.Router();
 
-// POST /api/quotes - public quote request
+// POST /api/quotes - public
 router.post('/', async (req, res) => {
-  const {
-    name, email, phone, eventType, requestedStart, requestedEnd,
-    numTrailers, location, estimatedGuests, notes
-  } = req.body;
-
-  if (!name || !email || !requestedStart) {
-    return res.status(400).json({ error: 'Name, email, and start date required' });
-  }
-
-  const db = getDb();
-  const result = db.prepare(`
-    INSERT INTO quotes (name, email, phone, event_type, requested_start, requested_end,
-      num_trailers, location, estimated_guests, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    name.trim(), email.toLowerCase().trim(), phone || '',
-    eventType || '', requestedStart, requestedEnd || null,
-    numTrailers || 1, location || '', estimatedGuests || null, notes || ''
-  );
-
-  const quote = db.prepare('SELECT * FROM quotes WHERE id = ?').get(result.lastInsertRowid);
-
-  // Send acknowledgment email
   try {
-    await sendQuoteConfirmation(quote);
-  } catch (err) {
-    console.error('Quote email error:', err.message);
-  }
+    const { name, email, phone, eventType, requestedStart, requestedEnd,
+            numTrailers, location, estimatedGuests, notes } = req.body;
 
-  res.status(201).json(quote);
+    if (!name || !email || !requestedStart) {
+      return res.status(400).json({ error: 'Name, email, and start date required' });
+    }
+
+    const db = getDb();
+    const result = await db.run(`
+      INSERT INTO quotes (name, email, phone, event_type, requested_start, requested_end,
+        num_trailers, location, estimated_guests, notes)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      name.trim(), email.toLowerCase().trim(), phone || '',
+      eventType || '', requestedStart, requestedEnd || null,
+      numTrailers || 1, location || '', estimatedGuests || null, notes || ''
+    ]);
+
+    const quote = await db.get('SELECT * FROM quotes WHERE id = ?', [result.lastInsertRowid]);
+
+    try { await sendQuoteConfirmation(quote); } catch (e) { console.error('Quote email error:', e.message); }
+
+    res.status(201).json(quote);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// GET /api/quotes (staff+)
-router.get('/', requireStaff, (req, res) => {
-  const db = getDb();
-  const { status } = req.query;
+// GET /api/quotes
+router.get('/', requireStaff, async (req, res) => {
+  try {
+    const db = getDb();
+    const { status } = req.query;
 
-  let query = 'SELECT * FROM quotes WHERE 1=1';
-  const params = [];
+    let sql = 'SELECT * FROM quotes WHERE 1=1';
+    const params = [];
+    if (status) { sql += ' AND status = ?'; params.push(status); }
+    sql += ' ORDER BY created_at DESC';
 
-  if (status) { query += ' AND status = ?'; params.push(status); }
-  query += ' ORDER BY created_at DESC';
-
-  const quotes = db.prepare(query).all(...params);
-  res.json(quotes);
+    const quotes = await db.all(sql, params);
+    res.json(quotes);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // GET /api/quotes/:id
-router.get('/:id', requireStaff, (req, res) => {
-  const db = getDb();
-  const quote = db.prepare('SELECT * FROM quotes WHERE id = ?').get(req.params.id);
-  if (!quote) return res.status(404).json({ error: 'Quote not found' });
-  res.json(quote);
+router.get('/:id', requireStaff, async (req, res) => {
+  try {
+    const db = getDb();
+    const quote = await db.get('SELECT * FROM quotes WHERE id = ?', [req.params.id]);
+    if (!quote) return res.status(404).json({ error: 'Quote not found' });
+    res.json(quote);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// PUT /api/quotes/:id (admin only - update status, add notes, set price)
-router.put('/:id', requireAdmin, (req, res) => {
-  const { status, adminNotes, estimatedPrice } = req.body;
-  const db = getDb();
+// PUT /api/quotes/:id
+router.put('/:id', requireAdmin, async (req, res) => {
+  try {
+    const { status, adminNotes, estimatedPrice } = req.body;
+    const db = getDb();
 
-  db.prepare(`
-    UPDATE quotes SET
-      status = COALESCE(?, status),
-      admin_notes = COALESCE(?, admin_notes),
-      estimated_price = COALESCE(?, estimated_price)
-    WHERE id = ?
-  `).run(status || null, adminNotes || null, estimatedPrice || null, req.params.id);
+    await db.run(`
+      UPDATE quotes SET
+        status          = COALESCE(?, status),
+        admin_notes     = COALESCE(?, admin_notes),
+        estimated_price = COALESCE(?, estimated_price)
+      WHERE id = ?
+    `, [status || null, adminNotes || null, estimatedPrice || null, req.params.id]);
 
-  const updated = db.prepare('SELECT * FROM quotes WHERE id = ?').get(req.params.id);
-  res.json(updated);
+    const updated = await db.get('SELECT * FROM quotes WHERE id = ?', [req.params.id]);
+    res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// DELETE /api/quotes/:id (admin only)
-router.delete('/:id', requireAdmin, (req, res) => {
-  const db = getDb();
-  db.prepare('DELETE FROM quotes WHERE id = ?').run(req.params.id);
-  res.json({ message: 'Quote deleted' });
+// DELETE /api/quotes/:id
+router.delete('/:id', requireAdmin, async (req, res) => {
+  try {
+    const db = getDb();
+    await db.run('DELETE FROM quotes WHERE id = ?', [req.params.id]);
+    res.json({ message: 'Quote deleted' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 module.exports = router;
