@@ -43,6 +43,16 @@ function exec(sql) {
   });
 }
 
+// ── Safe column migration helper ─────────────────────────────────────────────
+
+async function addColumnIfMissing(table, column, type) {
+  try {
+    await run(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
+  } catch (_) {
+    // Column already exists — ignore
+  }
+}
+
 // ── Schema ───────────────────────────────────────────────────────────────────
 
 async function initSchema() {
@@ -123,20 +133,46 @@ async function initSchema() {
     );
   `);
 
-  // Seed default accounts if none exist
-  const admin = await get('SELECT id FROM users WHERE role = ?', ['admin']);
-  if (!admin) {
-    const adminHash = bcrypt.hashSync('admin123', 10);
-    await run('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
-      ['Owner', 'admin@lavishlatrines.com', adminHash, 'admin']);
+  // ── Migrations: add new columns to existing tables ──
+  await addColumnIfMissing('bookings', 'water_access', 'TEXT');
+  await addColumnIfMissing('bookings', 'power_access', 'TEXT');
+  await addColumnIfMissing('bookings', 'expected_guests', 'TEXT');
+  await addColumnIfMissing('bookings', 'address_details', 'TEXT');
+  await addColumnIfMissing('bookings', 'created_by_admin', 'INTEGER DEFAULT 0');
+  await addColumnIfMissing('quotes',   'water_access', 'TEXT');
+  await addColumnIfMissing('quotes',   'power_access', 'TEXT');
+  await addColumnIfMissing('quotes',   'address_details', 'TEXT');
 
-    const staffHash = bcrypt.hashSync('staff123', 10);
-    await run('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
-      ['Staff Member', 'staff@lavishlatrines.com', staffHash, 'employee']);
+  // ── Admin account: always sync from env vars on startup ──
+  const adminEmail    = process.env.ADMIN_EMAIL    || 'admin@lavishlatrines.com';
+  const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
 
-    console.log('✓ Default accounts created');
-    console.log('  Admin: admin@lavishlatrines.com / admin123');
-    console.log('  Staff: staff@lavishlatrines.com / staff123');
+  const existingAdmin = await get("SELECT * FROM users WHERE role = 'admin'");
+
+  if (!existingAdmin) {
+    const hash = bcrypt.hashSync(adminPassword, 10);
+    await run('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
+      ['Owner', adminEmail, hash, 'admin']);
+    console.log(`✓ Admin account created: ${adminEmail}`);
+  } else {
+    // Update credentials if env vars differ from what's stored
+    const emailChanged    = existingAdmin.email !== adminEmail;
+    const passwordMatches = bcrypt.compareSync(adminPassword, existingAdmin.password_hash);
+    if (emailChanged || !passwordMatches) {
+      const hash = bcrypt.hashSync(adminPassword, 10);
+      await run('UPDATE users SET email = ?, password_hash = ? WHERE id = ?',
+        [adminEmail, hash, existingAdmin.id]);
+      console.log(`✓ Admin credentials updated: ${adminEmail}`);
+    }
+  }
+
+  // Seed default staff if none exist
+  const staffExists = await get("SELECT id FROM users WHERE role = 'employee'");
+  if (!staffExists) {
+    const hash = bcrypt.hashSync('staff123', 10);
+    await run('INSERT INTO users (name, email, password_hash, role) VALUES (?, ?, ?, ?)',
+      ['Staff Member', 'staff@lavishlatrines.com', hash, 'employee']);
+    console.log('✓ Default staff account created: staff@lavishlatrines.com / staff123');
   }
 }
 

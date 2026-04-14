@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
+import AdminBookingModal from './AdminBookingModal';
 
 function formatDate(d) {
   if (!d) return '';
@@ -24,6 +25,7 @@ export default function BookingsTable({ isAdmin }) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [selected, setSelected] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
   function load() {
     setLoading(true);
@@ -64,7 +66,7 @@ export default function BookingsTable({ isAdmin }) {
 
   return (
     <div className="space-y-4">
-      {/* Filters */}
+      {/* Filters + New Booking */}
       <div className="flex flex-col sm:flex-row gap-3">
         <input
           type="text"
@@ -79,6 +81,11 @@ export default function BookingsTable({ isAdmin }) {
           <option value="completed">Completed</option>
           <option value="cancelled">Cancelled</option>
         </select>
+        {isAdmin && (
+          <button onClick={() => setShowModal(true)} className="btn-gold text-sm py-2 px-5 whitespace-nowrap">
+            + New Booking
+          </button>
+        )}
       </div>
 
       {/* Table */}
@@ -207,6 +214,14 @@ export default function BookingsTable({ isAdmin }) {
       )}
 
       <p className="text-dark-400 text-xs text-right">{filtered.length} booking{filtered.length !== 1 ? 's' : ''} shown</p>
+
+      {showModal && (
+        <AdminBookingModal
+          defaultDate=""
+          onClose={() => setShowModal(false)}
+          onCreated={() => { setShowModal(false); load(); }}
+        />
+      )}
     </div>
   );
 }

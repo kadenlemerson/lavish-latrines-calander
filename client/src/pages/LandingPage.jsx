@@ -186,9 +186,12 @@ export default function LandingPage() {
               </div>
             ))}
           </div>
-          <div className="text-center mt-12">
+          <div className="text-center mt-12 flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/book" className="btn-gold text-lg px-10 py-4">
               Check Availability
+            </Link>
+            <Link to="/how-it-works" className="btn-outline text-lg px-10 py-4">
+              Learn More
             </Link>
           </div>
         </div>
@@ -226,6 +229,7 @@ export default function LandingPage() {
               <h4 className="text-white font-semibold mb-3">Quick Links</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link to="/book" className="hover:text-gold-500 transition-colors">Book a Date</Link></li>
+                <li><Link to="/how-it-works" className="hover:text-gold-500 transition-colors">How It Works</Link></li>
                 <li><Link to="/quote" className="hover:text-gold-500 transition-colors">Request a Quote</Link></li>
                 <li><Link to="/login" className="hover:text-gold-500 transition-colors">Staff Login</Link></li>
               </ul>

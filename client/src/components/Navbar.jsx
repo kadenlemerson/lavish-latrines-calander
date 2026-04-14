@@ -36,6 +36,11 @@ export default function Navbar() {
           }`}>
             Book Now
           </Link>
+          <Link to="/how-it-works" className={`font-medium hover:text-gold-500 transition-colors text-sm tracking-wide ${
+            scrolled || !isDark ? 'text-dark-700' : 'text-cream-200'
+          }`}>
+            How It Works
+          </Link>
           <Link to="/quote" className={`font-medium hover:text-gold-500 transition-colors text-sm tracking-wide ${
             scrolled || !isDark ? 'text-dark-700' : 'text-cream-200'
           }`}>
@@ -75,6 +80,7 @@ export default function Navbar() {
       {open && (
         <div className="md:hidden bg-white border-t border-cream-200 px-6 py-4 space-y-3">
           <Link to="/book" className="block text-dark-700 font-medium py-2" onClick={() => setOpen(false)}>Book Now</Link>
+          <Link to="/how-it-works" className="block text-dark-700 font-medium py-2" onClick={() => setOpen(false)}>How It Works</Link>
           <Link to="/quote" className="block text-dark-700 font-medium py-2" onClick={() => setOpen(false)}>Get a Quote</Link>
           {user ? (
             <>

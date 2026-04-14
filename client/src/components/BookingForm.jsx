@@ -8,15 +8,32 @@ const EVENT_TYPES = [
 function formatDateDisplay(dateStr) {
   if (!dateStr) return '';
   const [y, m, d] = dateStr.split('-');
-  const months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const months = ['January','February','March','April','May','June',
+    'July','August','September','October','November','December'];
   return `${months[parseInt(m)-1]} ${parseInt(d)}, ${y}`;
+}
+
+function Field({ label, error, children }) {
+  return (
+    <div>
+      <label className="label">{label}</label>
+      {children}
+      {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
+    </div>
+  );
 }
 
 export default function BookingForm({ selectedDate, onSubmit }) {
   const [form, setForm] = useState({
+    // Contact
     customerName: '', customerEmail: '', customerPhone: '',
     customerAddress: '', customerCity: '', customerState: 'WA', customerZip: '',
-    eventType: '', location: '', locationAddress: '', notes: ''
+    // Event
+    eventType: '', location: '', locationAddress: '', addressDetails: '',
+    // Venue details
+    waterAccess: '', powerAccess: '', expectedGuests: '',
+    // Extra
+    notes: ''
   });
   const [errors, setErrors] = useState({});
 
@@ -26,12 +43,12 @@ export default function BookingForm({ selectedDate, onSubmit }) {
 
   function validate() {
     const errs = {};
-    if (!form.customerName.trim()) errs.customerName = 'Name is required';
-    if (!form.customerEmail.trim()) errs.customerEmail = 'Email is required';
-    if (!/\S+@\S+\.\S+/.test(form.customerEmail)) errs.customerEmail = 'Valid email required';
+    if (!form.customerName.trim())  errs.customerName  = 'Name is required';
+    if (!form.customerEmail.trim() || !/\S+@\S+\.\S+/.test(form.customerEmail))
+      errs.customerEmail = 'Valid email required';
     if (!form.customerPhone.trim()) errs.customerPhone = 'Phone is required';
-    if (!form.eventType) errs.eventType = 'Event type is required';
-    if (!form.location.trim()) errs.location = 'Event location / venue is required';
+    if (!form.eventType)            errs.eventType     = 'Event type is required';
+    if (!form.location.trim())      errs.location      = 'Venue / location name is required';
     return errs;
   }
 
@@ -57,93 +74,114 @@ export default function BookingForm({ selectedDate, onSubmit }) {
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
-        {/* Customer Info */}
+
+        {/* ── Contact Information ── */}
         <div className="card">
           <h3 className="font-serif text-lg font-bold text-dark-800 mb-4">Your Information</h3>
           <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="label">Full Name *</label>
+            <Field label="Full Name *" error={errors.customerName}>
               <input type="text" value={form.customerName} onChange={set('customerName')}
                 className={`input-field ${errors.customerName ? 'border-red-400' : ''}`}
                 placeholder="Jane Smith" />
-              {errors.customerName && <p className="text-red-500 text-xs mt-1">{errors.customerName}</p>}
-            </div>
-            <div>
-              <label className="label">Email Address *</label>
+            </Field>
+            <Field label="Email Address *" error={errors.customerEmail}>
               <input type="email" value={form.customerEmail} onChange={set('customerEmail')}
                 className={`input-field ${errors.customerEmail ? 'border-red-400' : ''}`}
                 placeholder="jane@example.com" />
-              {errors.customerEmail && <p className="text-red-500 text-xs mt-1">{errors.customerEmail}</p>}
-            </div>
-            <div>
-              <label className="label">Phone Number *</label>
+            </Field>
+            <Field label="Phone Number *" error={errors.customerPhone}>
               <input type="tel" value={form.customerPhone} onChange={set('customerPhone')}
                 className={`input-field ${errors.customerPhone ? 'border-red-400' : ''}`}
                 placeholder="(360) 555-0000" />
-              {errors.customerPhone && <p className="text-red-500 text-xs mt-1">{errors.customerPhone}</p>}
-            </div>
-            <div>
-              <label className="label">Street Address</label>
+            </Field>
+            <Field label="Street Address">
               <input type="text" value={form.customerAddress} onChange={set('customerAddress')}
                 className="input-field" placeholder="123 Main St" />
-            </div>
-            <div>
-              <label className="label">City</label>
+            </Field>
+            <Field label="City">
               <input type="text" value={form.customerCity} onChange={set('customerCity')}
                 className="input-field" placeholder="Vancouver" />
-            </div>
+            </Field>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="label">State</label>
+              <Field label="State">
                 <select value={form.customerState} onChange={set('customerState')} className="input-field">
-                  <option>WA</option><option>OR</option><option>ID</option><option>CA</option>
-                  <option>MT</option><option>NV</option><option>AZ</option><option>Other</option>
+                  {['WA','OR','ID','CA','MT','NV','AZ','Other'].map(s => <option key={s}>{s}</option>)}
                 </select>
-              </div>
-              <div>
-                <label className="label">ZIP</label>
+              </Field>
+              <Field label="ZIP">
                 <input type="text" value={form.customerZip} onChange={set('customerZip')}
                   className="input-field" placeholder="98660" maxLength={10} />
-              </div>
+              </Field>
             </div>
           </div>
         </div>
 
-        {/* Event Info */}
+        {/* ── Event Details ── */}
         <div className="card">
           <h3 className="font-serif text-lg font-bold text-dark-800 mb-4">Event Details</h3>
           <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <label className="label">Event Type *</label>
+            <Field label="Event Type *" error={errors.eventType}>
               <select value={form.eventType} onChange={set('eventType')}
                 className={`input-field ${errors.eventType ? 'border-red-400' : ''}`}>
                 <option value="">Select event type...</option>
                 {EVENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
-              {errors.eventType && <p className="text-red-500 text-xs mt-1">{errors.eventType}</p>}
-            </div>
-            <div>
-              <label className="label">Venue / Location Name *</label>
+            </Field>
+            <Field label="Venue / Location Name *" error={errors.location}>
               <input type="text" value={form.location} onChange={set('location')}
                 className={`input-field ${errors.location ? 'border-red-400' : ''}`}
                 placeholder="e.g. Riverside Vineyard" />
-              {errors.location && <p className="text-red-500 text-xs mt-1">{errors.location}</p>}
-            </div>
+            </Field>
             <div className="md:col-span-2">
-              <label className="label">Delivery Address</label>
-              <input type="text" value={form.locationAddress} onChange={set('locationAddress')}
-                className="input-field" placeholder="Full address where trailer should be delivered" />
-            </div>
-            <div className="md:col-span-2">
-              <label className="label">Special Requests / Notes</label>
-              <textarea value={form.notes} onChange={set('notes')}
-                className="input-field min-h-[100px] resize-none"
-                placeholder="Any special requirements, access instructions, or notes for our team..." />
+              <Field label="How many guests are expected at your event?">
+                <input type="text" value={form.expectedGuests} onChange={set('expectedGuests')}
+                  className="input-field" placeholder="e.g. 150" />
+              </Field>
             </div>
           </div>
         </div>
 
-        {/* Pricing summary */}
+        {/* ── Venue Access & Location ── */}
+        <div className="card">
+          <h3 className="font-serif text-lg font-bold text-dark-800 mb-1">Venue Access & Location</h3>
+          <p className="text-dark-500 text-sm mb-4">
+            This helps us prepare the right equipment for your event.
+          </p>
+          <div className="space-y-4">
+            <Field label="Do you have water access at your venue?">
+              <input type="text" value={form.waterAccess} onChange={set('waterAccess')}
+                className="input-field"
+                placeholder="e.g. Yes — outdoor spigot near the barn" />
+            </Field>
+            <Field label="Do you have power access at your venue?">
+              <input type="text" value={form.powerAccess} onChange={set('powerAccess')}
+                className="input-field"
+                placeholder="e.g. Yes — standard 110V outlet, or No — generator only" />
+            </Field>
+            <Field label="What is the venue address?">
+              <input type="text" value={form.locationAddress} onChange={set('locationAddress')}
+                className="input-field"
+                placeholder="Full delivery address where the trailer should be dropped off" />
+            </Field>
+            <Field label="Additional address details or notes about the location">
+              <textarea value={form.addressDetails} onChange={set('addressDetails')}
+                className="input-field min-h-[80px] resize-none"
+                placeholder="e.g. Enter through the main gate on Oak Rd, park on the grass near the pavilion..." />
+            </Field>
+          </div>
+        </div>
+
+        {/* ── Additional Questions ── */}
+        <div className="card">
+          <h3 className="font-serif text-lg font-bold text-dark-800 mb-4">Anything Else?</h3>
+          <Field label="Do you have any questions or anything else you would like to share with us?">
+            <textarea value={form.notes} onChange={set('notes')}
+              className="input-field min-h-[100px] resize-none"
+              placeholder="Ask us anything — we're happy to help make your event perfect." />
+          </Field>
+        </div>
+
+        {/* ── Pricing summary ── */}
         <div className="card bg-dark-800 text-white">
           <h3 className="font-serif text-lg font-bold text-gold-400 mb-4">Pricing Summary</h3>
           <div className="space-y-2">
@@ -151,14 +189,12 @@ export default function BookingForm({ selectedDate, onSubmit }) {
               <span>Trailer Rental (1 day)</span>
               <span>$1,100.00</span>
             </div>
-            <div className="border-t border-dark-600 pt-2 mt-2">
+            <div className="border-t border-dark-600 pt-2">
               <div className="flex justify-between text-gold-400 font-bold text-lg">
-                <span>Deposit Due Today (50%)</span>
-                <span>$550.00</span>
+                <span>Deposit Due Today (50%)</span><span>$550.00</span>
               </div>
               <div className="flex justify-between text-cream-400 text-sm mt-1">
-                <span>Balance Due at Delivery</span>
-                <span>$550.00</span>
+                <span>Balance Due at Delivery</span><span>$550.00</span>
               </div>
             </div>
           </div>

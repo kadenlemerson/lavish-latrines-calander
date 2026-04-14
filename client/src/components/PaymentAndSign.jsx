@@ -128,6 +128,14 @@ export default function PaymentAndSign({ selectedDate, formData, onComplete }) {
     setProcessing(true);
 
     try {
+      // Re-check availability before charging the card
+      const availRes = await api.get(`/bookings/availability?date=${selectedDate}`);
+      if (!availRes.data.available) {
+        setError('Sorry — this date was just booked by someone else. Please go back and choose a different date.');
+        setProcessing(false);
+        return;
+      }
+
       let squarePaymentId = null;
 
       // Process payment if Square is configured
