@@ -58,11 +58,21 @@ router.post('/create', async (req, res) => {
 
 // GET /api/payments/config - return public Square config for frontend
 router.get('/config', (req, res) => {
+  const appId      = process.env.SQUARE_APP_ID      || '';
+  const locationId = process.env.SQUARE_LOCATION_ID || '';
+  const environment = process.env.SQUARE_ENVIRONMENT || 'sandbox';
+  const configured = !!(appId && locationId);
+
+  const missingVars = [];
+  if (!appId)      missingVars.push('SQUARE_APP_ID');
+  if (!locationId) missingVars.push('SQUARE_LOCATION_ID');
+
   res.json({
-    appId: process.env.SQUARE_APP_ID || '',
-    locationId: process.env.SQUARE_LOCATION_ID || '',
-    environment: process.env.SQUARE_ENVIRONMENT || 'sandbox',
-    configured: !!(process.env.SQUARE_APP_ID && process.env.SQUARE_LOCATION_ID)
+    appId,
+    locationId,
+    environment,
+    configured,
+    missingVars: missingVars.length ? missingVars : undefined
   });
 });
 

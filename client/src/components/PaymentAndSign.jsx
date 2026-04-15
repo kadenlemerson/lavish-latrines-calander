@@ -37,52 +37,69 @@ This Agreement constitutes the entire agreement between the parties and supersed
 By signing below, the Client acknowledges they have read, understood, and agree to all terms of this Agreement.`;
 
 export default function PaymentAndSign({ selectedDate, formData, onComplete }) {
-  const [squareConfig, setSquareConfig] = useState({ configured: false, appId: '', locationId: '' });
+  const [squareConfig, setSquareConfig] = useState(null); // null = not yet loaded
   const [squareCard, setSquareCard] = useState(null);
-  const [squarePayments, setSquarePayments] = useState(null);
   const [squareReady, setSquareReady] = useState(false);
   const [squareError, setSquareError] = useState('');
   const [contractRead, setContractRead] = useState(false);
-  const [sigPad, setSigPad] = useState(null);
   const [signed, setSigned] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState('');
   const canvasRef = useRef(null);
   const cardContainerRef = useRef(null);
   const sigPadInstance = useRef(null);
+  const squareCardRef = useRef(null); // keep in sync with state for async access
 
+  // Fetch Square config from server, then load the correct SDK version
   useEffect(() => {
     api.get('/payments/config').then(r => {
       setSquareConfig(r.data);
+      if (r.data.configured) {
+        loadSquareSdk(r.data);
+      } else {
+        setSquareReady(true); // no Square — skip payment
+      }
+    }).catch(() => {
+      setSquareReady(true); // can't reach server — skip gracefully
     });
   }, []);
 
-  // Initialize Square
-  useEffect(() => {
-    if (!squareConfig.configured || !squareConfig.appId) {
-      setSquareReady(true); // skip Square if not configured
+  function loadSquareSdk(config) {
+    // Use the correct SDK URL for the environment
+    const sdkUrl = config.environment === 'production'
+      ? 'https://web.squarecdn.com/v1/square.js'
+      : 'https://sandbox.web.squarecdn.com/v1/square.js';
+
+    // If already loaded (e.g., HMR / navigating back to this page), init directly
+    if (window.Square) {
+      initSquareCard(config);
       return;
     }
 
-    const tryInit = async () => {
-      if (!window.Square) {
-        setTimeout(tryInit, 500);
-        return;
-      }
-      try {
-        const payments = window.Square.payments(squareConfig.appId, squareConfig.locationId);
-        setSquarePayments(payments);
-        const card = await payments.card();
-        await card.attach('#square-card-container');
-        setSquareCard(card);
-        setSquareReady(true);
-      } catch (e) {
-        setSquareError('Payment form could not be loaded. ' + e.message);
-        setSquareReady(true);
-      }
+    const script = document.createElement('script');
+    script.src = sdkUrl;
+    script.async = true;
+    script.onload = () => initSquareCard(config);
+    script.onerror = () => {
+      setSquareError('Could not load the Square payment SDK. Check your internet connection and try again.');
+      setSquareReady(true);
     };
-    tryInit();
-  }, [squareConfig]);
+    document.head.appendChild(script);
+  }
+
+  async function initSquareCard(config) {
+    try {
+      const payments = window.Square.payments(config.appId, config.locationId);
+      const card = await payments.card();
+      await card.attach('#square-card-container');
+      squareCardRef.current = card;
+      setSquareCard(card);
+      setSquareReady(true);
+    } catch (e) {
+      setSquareError('Payment form could not be initialized: ' + e.message);
+      setSquareReady(true);
+    }
+  }
 
   // Initialize signature pad
   useEffect(() => {
@@ -137,10 +154,11 @@ export default function PaymentAndSign({ selectedDate, formData, onComplete }) {
       }
 
       let squarePaymentId = null;
+      const card = squareCardRef.current;
 
-      // Process payment if Square is configured
-      if (squareConfig.configured && squareCard) {
-        const tokenResult = await squareCard.tokenize();
+      // Process payment if Square is configured and card form is ready
+      if (squareConfig?.configured && card) {
+        const tokenResult = await card.tokenize();
         if (tokenResult.status !== 'OK') {
           setError('Payment failed: ' + (tokenResult.errors?.[0]?.message || 'Card error'));
           setProcessing(false);
@@ -205,21 +223,40 @@ export default function PaymentAndSign({ selectedDate, formData, onComplete }) {
       {/* Payment */}
       <div className="card">
         <h3 className="font-serif text-lg font-bold text-dark-800 mb-1">Secure Payment</h3>
-        <p className="text-dark-500 text-sm mb-4">
-          {squareConfig.configured
-            ? 'Your 50% deposit of $550.00 will be charged securely via Square.'
-            : '⚠ Payment processing is not yet configured. Your booking will be created and we\'ll contact you to collect payment.'}
-        </p>
-        {squareConfig.configured && (
+
+        {/* Config not yet loaded */}
+        {squareConfig === null && (
+          <div className="flex items-center gap-2 text-dark-500 text-sm py-4">
+            <div className="w-4 h-4 border-2 border-gold-400 border-t-transparent rounded-full animate-spin" />
+            Loading payment settings...
+          </div>
+        )}
+
+        {/* Square not configured */}
+        {squareConfig !== null && !squareConfig.configured && (
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-amber-800 text-sm">
+            <p className="font-semibold mb-1">Payment not yet active</p>
+            <p>Square credentials are not fully configured on the server. Your booking will be created and we will contact you to collect payment.</p>
+            {squareConfig.missingVars && (
+              <p className="mt-2 text-xs font-mono text-amber-700">Missing: {squareConfig.missingVars.join(', ')}</p>
+            )}
+          </div>
+        )}
+
+        {/* Square configured — show card form or loading/error state */}
+        {squareConfig !== null && squareConfig.configured && (
           <>
-            {!squareReady ? (
+            <p className="text-dark-500 text-sm mb-4">
+              Your 50% deposit of $550.00 will be charged securely via Square.
+            </p>
+            {squareError ? (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {squareError}
+              </div>
+            ) : !squareReady ? (
               <div className="flex items-center gap-2 text-dark-500 text-sm py-4">
                 <div className="w-4 h-4 border-2 border-gold-400 border-t-transparent rounded-full animate-spin" />
                 Loading secure payment form...
-              </div>
-            ) : squareError ? (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
-                {squareError}
               </div>
             ) : (
               <div id="square-card-container" ref={cardContainerRef}
@@ -227,6 +264,7 @@ export default function PaymentAndSign({ selectedDate, formData, onComplete }) {
             )}
           </>
         )}
+
         <p className="text-xs text-dark-400 mt-3 flex items-center gap-1">
           <span>🔒</span> Payments are encrypted and secured by Square.
         </p>
