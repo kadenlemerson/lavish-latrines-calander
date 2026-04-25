@@ -7,9 +7,10 @@ function getTransporter() {
     return null;
   }
   return nodemailer.createTransport({
-    host:   process.env.EMAIL_HOST || 'smtp.gmail.com',
+    host:   process.env.EMAIL_HOST || 'smtp.office365.com',
     port:   parseInt(process.env.EMAIL_PORT || '587'),
     secure: process.env.EMAIL_SECURE === 'true',
+    tls:    { ciphers: 'SSLv3' },
     auth: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS }
   });
 }
