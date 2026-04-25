@@ -126,6 +126,14 @@ export default function LandingPage() {
                     </li>
                   ))}
                 </ul>
+                <div className="mt-6 pt-6 border-t border-cream-200">
+                  <h4 className="font-serif text-sm font-semibold text-dark-700 mb-2">What Happens After You Book</h4>
+                  <p className="text-dark-500 text-xs leading-relaxed">
+                    Once your deposit is submitted, we take it from there. You'll hear from us within 1–5 business days
+                    to confirm your reservation and coordinate delivery details. We'll drop off and set up your trailer
+                    the day before your event, and handle pickup the day after — so you can focus entirely on your event.
+                  </p>
+                </div>
                 <Link to="/book" className="btn-gold block text-center mt-8">
                   Book Now
                 </Link>

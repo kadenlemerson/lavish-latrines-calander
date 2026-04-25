@@ -34,13 +34,13 @@ const logistics = [
     icon: '💧',
     title: 'Water Supply',
     detail: 'We bring a 100 ft water hose.',
-    body: 'You just need a standard outdoor spigot within 100 feet of where the trailer will be parked. We\'ll connect everything before your guests arrive.'
+    body: "You just need a standard outdoor spigot — the exact distance can vary depending on where your spigot is located and what hose attachments you have available. We'll bring our own 100 ft hose and handle all the connections, or if you already have one hooked up we're happy to use that instead. If you need additional reach beyond what we provide, you're welcome to supply your own extension hose and we'll take care of the rest."
   },
   {
     icon: '⚡',
     title: 'Power Supply',
     detail: 'We bring a 50 ft extension cord.',
-    body: 'You need a standard 110V / 15-amp outdoor outlet within 50 feet. Note: on a standard 10-amp circuit, you can run the hot water OR the air conditioning — but not both simultaneously. If your venue has a dedicated trailer plug (or a 20-amp circuit), our trailer can run everything at the same time.'
+    body: "You'll need a standard 110V outdoor outlet — the distance can vary since extension cords can always be added. We bring one 50 ft extension cord, so if your outlet is further away you're welcome to supply additional extension cords and we'll get everything connected. A single 15-amp household circuit can run the lights plus either the hot water or the air conditioning — but not all three at once. For the full experience with everything running simultaneously, we recommend two separate outlets on different circuits, or a single dedicated 20-amp circuit. If you're unsure what your venue has, just let us know and we'll help you figure it out!"
   },
   {
     icon: '🚚',
