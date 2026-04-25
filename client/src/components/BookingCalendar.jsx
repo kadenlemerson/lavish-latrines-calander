@@ -96,9 +96,9 @@ export default function BookingCalendar({ onSelectDate, readOnly = false, highli
             classes += 'text-dark-300 bg-cream-100 cursor-not-allowed ';
             tooltip = isBlocked ? 'Fully booked' : 'Date passed';
           } else if (isHighlighted) {
-            classes += 'bg-gold-500 text-dark-800 font-bold cursor-default ';
+            classes += 'bg-gold-500 text-white font-bold cursor-default ';
           } else if (!readOnly) {
-            classes += 'cursor-pointer hover:bg-gold-100 hover:text-dark-800 text-dark-700 ';
+            classes += 'cursor-pointer hover:bg-gold-100 hover:text-gold-700 text-dark-700 ';
             if (hovered === dateStr) classes += 'ring-2 ring-gold-400 ';
           } else {
             classes += 'text-dark-700 ';

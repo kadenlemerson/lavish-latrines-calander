@@ -118,7 +118,7 @@ export default function PaymentAndSign({ selectedDate, formData, onComplete }) {
 
     const pad = new SignaturePad(canvasRef.current, {
       backgroundColor: 'rgb(255,255,255)',
-      penColor: '#1a1a1a',
+      penColor: '#0d1230',
       minWidth: 1,
       maxWidth: 3
     });

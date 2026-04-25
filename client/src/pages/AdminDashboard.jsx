@@ -46,7 +46,7 @@ export default function AdminDashboard() {
               onClick={() => setTab(t.id)}
               className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all text-left ${
                 tab === t.id
-                  ? 'bg-gold-500 text-dark-800'
+                  ? 'bg-gold-500 text-white'
                   : 'text-dark-300 hover:bg-dark-700 hover:text-white'
               }`}
             >
@@ -57,7 +57,7 @@ export default function AdminDashboard() {
         </nav>
         <div className="p-4 border-t border-dark-700">
           <div className="flex items-center gap-3 mb-3">
-            <div className="w-9 h-9 bg-gold-500 rounded-full flex items-center justify-center text-dark-800 font-bold text-sm">
+            <div className="w-9 h-9 bg-gold-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
               {user?.name?.charAt(0)}
             </div>
             <div>

@@ -54,7 +54,7 @@ export default function BookingPage() {
                 <React.Fragment key={s}>
                   <div className="flex flex-col items-center">
                     <div className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-                      i < step ? 'bg-gold-500 text-dark-800'
+                      i < step ? 'bg-gold-500 text-white'
                       : i === step ? 'bg-dark-800 text-gold-400 ring-2 ring-gold-400'
                       : 'bg-cream-200 text-dark-400'
                     }`}>

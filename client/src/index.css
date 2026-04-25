@@ -4,17 +4,17 @@
 
 @layer base {
   body {
-    @apply font-sans text-dark-800 bg-cream-50;
+    @apply font-sans text-dark-800 bg-white;
   }
 
   h1, h2, h3, h4 {
-    @apply font-serif;
+    @apply font-sans font-semibold tracking-tight;
   }
 }
 
 @layer components {
   .btn-gold {
-    @apply bg-gold-gradient text-dark-800 font-semibold px-6 py-3 rounded-lg
+    @apply bg-gold-gradient text-white font-semibold px-6 py-3 rounded-lg
            hover:opacity-90 active:scale-[0.98] transition-all duration-150
            shadow-md hover:shadow-lg;
   }
@@ -27,7 +27,7 @@
 
   .btn-outline {
     @apply border-2 border-gold-500 text-gold-600 font-semibold px-6 py-3 rounded-lg
-           hover:bg-gold-500 hover:text-dark-800 transition-all duration-150;
+           hover:bg-gold-500 hover:text-white transition-all duration-150;
   }
 
   .card {
@@ -74,7 +74,7 @@
   }
 
   .section-title {
-    @apply text-3xl font-serif font-bold text-dark-800;
+    @apply text-3xl font-sans font-bold text-dark-800 tracking-tight;
   }
 
   .section-subtitle {
@@ -82,19 +82,19 @@
   }
 }
 
-/* Custom scrollbar */
+/* Custom scrollbar — blue on near-white */
 ::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #f5f0e8; }
-::-webkit-scrollbar-thumb { background: #C9A84C; border-radius: 3px; }
+::-webkit-scrollbar-track { background: #f5f7fc; }
+::-webkit-scrollbar-thumb { background: #1a1adb; border-radius: 3px; }
 
-/* Gold shimmer animation */
+/* Royal-blue shimmer animation (used by the hero headline) */
 @keyframes shimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
 }
 
 .shimmer {
-  background: linear-gradient(90deg, #C9A84C 0%, #f5d987 50%, #C9A84C 100%);
+  background: linear-gradient(90deg, #1a1adb 0%, #5868ff 50%, #1a1adb 100%);
   background-size: 200% auto;
   animation: shimmer 3s linear infinite;
   -webkit-background-clip: text;

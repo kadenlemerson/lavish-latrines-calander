@@ -28,7 +28,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-dark-800 flex items-center justify-center px-6">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5"
-        style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #C9A84C 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+        style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #5868ff 1px, transparent 0)', backgroundSize: '32px 32px' }} />
 
       <div className="relative w-full max-w-md">
         {/* Logo */}

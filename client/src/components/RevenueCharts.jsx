@@ -5,9 +5,9 @@ import {
 } from 'recharts';
 import api from '../api';
 
-const GOLD = '#C9A84C';
-const DARK = '#1a1a1a';
-const BLUE = '#3b82f6';
+const GOLD = '#1a1adb';   // primary brand blue (formerly gold)
+const DARK = '#0d1230';   // deep navy (formerly black)
+const BLUE = '#5868ff';   // accent (lighter blue)
 const GREEN = '#22c55e';
 
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -100,8 +100,8 @@ export default function RevenueCharts() {
               <YAxis tickFormatter={v => `$${v >= 1000 ? (v/1000).toFixed(0)+'k' : v}`} tick={{ fontSize: 11, fill: '#777' }} />
               <Tooltip
                 formatter={(v, name) => [fmt(v), name === 'revenue' ? 'Total Revenue' : 'Deposits']}
-                contentStyle={{ background: '#1a1a1a', border: 'none', borderRadius: 8, color: '#fff' }}
-                labelStyle={{ color: '#C9A84C' }}
+                contentStyle={{ background: '#0d1230', border: 'none', borderRadius: 8, color: '#fff' }}
+                labelStyle={{ color: '#5868ff' }}
               />
               <Legend formatter={v => v === 'revenue' ? 'Total Revenue' : 'Deposits Received'} />
               <Bar dataKey="revenue" name="revenue" fill={GOLD} radius={[4,4,0,0]} />
@@ -120,8 +120,8 @@ export default function RevenueCharts() {
               <CartesianGrid strokeDasharray="3 3" stroke="#e8e0d0" />
               <XAxis dataKey="month" tick={{ fontSize: 12, fill: '#777' }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 11, fill: '#777' }} />
-              <Tooltip contentStyle={{ background: '#1a1a1a', border: 'none', borderRadius: 8, color: '#fff' }}
-                labelStyle={{ color: '#C9A84C' }} />
+              <Tooltip contentStyle={{ background: '#0d1230', border: 'none', borderRadius: 8, color: '#fff' }}
+                labelStyle={{ color: '#5868ff' }} />
               <Line type="monotone" dataKey="bookings" stroke={GOLD} strokeWidth={2.5}
                 dot={{ fill: GOLD, r: 4 }} activeDot={{ r: 6 }} />
             </LineChart>
@@ -141,7 +141,7 @@ export default function RevenueCharts() {
                     {pieData.map((_, i) => <Cell key={i} fill={PIE_COLORS[i]} />)}
                   </Pie>
                   <Tooltip formatter={v => fmt(v)}
-                    contentStyle={{ background: '#1a1a1a', border: 'none', borderRadius: 8, color: '#fff' }} />
+                    contentStyle={{ background: '#0d1230', border: 'none', borderRadius: 8, color: '#fff' }} />
                 </PieChart>
               </ResponsiveContainer>
               <div className="space-y-3">

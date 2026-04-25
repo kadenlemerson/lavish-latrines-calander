@@ -135,7 +135,7 @@ export default function AdminCalendar() {
                 {!isFull && (
                   <button
                     onClick={e => { e.stopPropagation(); openModalForDate(dateStr); }}
-                    className="absolute bottom-0.5 right-0.5 w-4 h-4 bg-gold-500 text-dark-800 rounded-full text-xs
+                    className="absolute bottom-0.5 right-0.5 w-4 h-4 bg-gold-500 text-white rounded-full text-xs
                                items-center justify-center hidden group-hover:flex hover:flex opacity-0 hover:opacity-100
                                transition-opacity"
                     style={{ display: 'none' }}

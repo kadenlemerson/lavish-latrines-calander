@@ -11,7 +11,7 @@ export default function LandingPage() {
       <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden bg-dark-800">
         {/* Background pattern */}
         <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #C9A84C 1px, transparent 0)', backgroundSize: '32px 32px' }} />
+          style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, #1a1adb 1px, transparent 0)', backgroundSize: '32px 32px' }} />
 
         <div className="relative text-center px-6 max-w-5xl mx-auto">
           <p className="text-gold-500 text-sm tracking-[0.3em] uppercase font-medium mb-6">
@@ -141,9 +141,9 @@ export default function LandingPage() {
             </div>
             <div className="card-luxury">
               <div className="bg-gold-gradient p-8 text-center">
-                <p className="text-dark-800 text-sm tracking-widest uppercase font-semibold mb-2">Custom Quote</p>
-                <div className="text-5xl font-bold text-dark-800 mb-1">Custom</div>
-                <p className="text-dark-700">multi-day · both trailers</p>
+                <p className="text-white text-sm tracking-widest uppercase font-semibold mb-2 opacity-90">Custom Quote</p>
+                <div className="text-5xl font-bold text-white mb-1">Custom</div>
+                <p className="text-white opacity-80">multi-day · both trailers</p>
               </div>
               <div className="p-8">
                 <ul className="space-y-3 text-dark-600">
