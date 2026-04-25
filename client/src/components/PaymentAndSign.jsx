@@ -38,7 +38,8 @@ By signing below, the Client acknowledges they have read, understood, and agree 
 
 export default function PaymentAndSign({ selectedDate, formData, onComplete }) {
   const [squareConfig, setSquareConfig] = useState(null);
-  const [squareReady, setSquareReady]   = useState(false);
+  const [squareReady, setSquareReady]   = useState(false); // SDK script loaded (or skipped)
+  const [cardAttached, setCardAttached] = useState(false); // card.attach() succeeded
   const [squareError, setSquareError]   = useState('');
   const [contractRead, setContractRead] = useState(false);
   const [signed, setSigned]             = useState(false);
@@ -49,56 +50,69 @@ export default function PaymentAndSign({ selectedDate, formData, onComplete }) {
   const sigPadRef       = useRef(null);  // SignaturePad instance
   const squareCardRef   = useRef(null);  // Square Card instance
 
-  // ── 1. Fetch Square config, then dynamically load the right SDK ──────────────
+  // ── 1. Fetch Square config and load the SDK script (do NOT attach card yet) ──
   useEffect(() => {
     api.get('/payments/config')
       .then(r => {
         setSquareConfig(r.data);
-        if (r.data.configured) {
-          loadSquareSdk(r.data);
-        } else {
-          setSquareReady(true);
+
+        if (!r.data.configured) {
+          setSquareReady(true); // no payment — skip SDK load
+          return;
         }
+
+        const sdkUrl = r.data.environment === 'production'
+          ? 'https://web.squarecdn.com/v1/square.js'
+          : 'https://sandbox.web.squarecdn.com/v1/square.js';
+
+        if (window.Square) {
+          setSquareReady(true); // already loaded (e.g. HMR / re-mount)
+          return;
+        }
+
+        const script = document.createElement('script');
+        script.src   = sdkUrl;
+        script.async = true;
+        script.onload  = () => setSquareReady(true);
+        script.onerror = () => {
+          setSquareError('Could not load the Square payment SDK. Please refresh and try again.');
+          setSquareReady(true);
+        };
+        document.head.appendChild(script);
       })
       .catch(() => setSquareReady(true));
   }, []);
 
-  function loadSquareSdk(config) {
-    // Production accounts must use the production SDK URL, not sandbox
-    const sdkUrl = config.environment === 'production'
-      ? 'https://web.squarecdn.com/v1/square.js'
-      : 'https://sandbox.web.squarecdn.com/v1/square.js';
+  // ── 2. Attach the card form AFTER React has rendered the container div ──────
+  useEffect(() => {
+    if (!squareConfig?.configured) return;
+    if (!squareReady)              return;
+    if (squareError)               return;
+    if (squareCardRef.current)     return; // already attached
 
-    if (window.Square) {
-      initSquareCard(config);
-      return;
-    }
+    // setTimeout(0) yields to the browser so React's commit flushes
+    // #square-card-container into the DOM before card.attach() runs.
+    const timer = setTimeout(async () => {
+      const container = document.getElementById('square-card-container');
+      if (!container) {
+        setSquareError('Payment form container is not in the DOM yet — please refresh the page.');
+        return;
+      }
+      try {
+        const payments = window.Square.payments(squareConfig.appId, squareConfig.locationId);
+        const card     = await payments.card();
+        await card.attach('#square-card-container');
+        squareCardRef.current = card;
+        setCardAttached(true);
+      } catch (e) {
+        setSquareError('Payment form could not be initialized: ' + e.message);
+      }
+    }, 0);
 
-    const script = document.createElement('script');
-    script.src    = sdkUrl;
-    script.async  = true;
-    script.onload = () => initSquareCard(config);
-    script.onerror = () => {
-      setSquareError('Could not load the Square payment SDK. Please refresh the page and try again.');
-      setSquareReady(true);
-    };
-    document.head.appendChild(script);
-  }
+    return () => clearTimeout(timer);
+  }, [squareConfig, squareReady, squareError]);
 
-  async function initSquareCard(config) {
-    try {
-      const payments = window.Square.payments(config.appId, config.locationId);
-      const card     = await payments.card();
-      await card.attach('#square-card-container');
-      squareCardRef.current = card;
-      setSquareReady(true);
-    } catch (e) {
-      setSquareError('Payment form could not be initialized: ' + e.message);
-      setSquareReady(true);
-    }
-  }
-
-  // ── 2. Initialize signature pad ──────────────────────────────────────────────
+  // ── 3. Initialize signature pad ──────────────────────────────────────────────
   useEffect(() => {
     if (!canvasRef.current || sigPadRef.current) return;
 
@@ -132,10 +146,9 @@ export default function PaymentAndSign({ selectedDate, formData, onComplete }) {
     setSigned(false);
   }
 
-  // ── 3. Submit ────────────────────────────────────────────────────────────────
+  // ── 4. Submit ────────────────────────────────────────────────────────────────
   const paymentRequired = squareConfig?.configured;
-  const cardReady       = !!squareCardRef.current;
-  const canSubmit       = signed && contractRead && (!paymentRequired || cardReady) && !processing;
+  const canSubmit       = signed && contractRead && (!paymentRequired || (cardAttached && !squareError)) && !processing;
 
   async function handleSubmit() {
     if (!signed)       { setError('Please sign the contract before submitting.'); return; }
@@ -245,16 +258,23 @@ export default function PaymentAndSign({ selectedDate, formData, onComplete }) {
               <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
                 {squareError}
               </div>
-            ) : !squareReady ? (
-              <div className="flex items-center gap-2 text-dark-500 text-sm py-4">
-                <div className="w-4 h-4 border-2 border-gold-400 border-t-transparent rounded-full animate-spin" />
-                Loading secure payment form...
-              </div>
             ) : (
-              <div
-                id="square-card-container"
-                className="border border-cream-300 rounded-lg p-4 min-h-[90px]"
-              />
+              <>
+                {(!squareReady || !cardAttached) && (
+                  <div className="flex items-center gap-2 text-dark-500 text-sm py-2">
+                    <div className="w-4 h-4 border-2 border-gold-400 border-t-transparent rounded-full animate-spin" />
+                    Loading secure payment form...
+                  </div>
+                )}
+                {/* Container must be mounted as soon as the SDK is loaded so
+                    card.attach() can find it on the next tick. */}
+                {squareReady && (
+                  <div
+                    id="square-card-container"
+                    className="border border-cream-300 rounded-lg p-4 min-h-[90px]"
+                  />
+                )}
+              </>
             )}
           </>
         )}
