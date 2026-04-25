@@ -34,7 +34,7 @@ router.post('/create', async (req, res) => {
       sourceId,
       idempotencyKey,
       amountMoney: {
-        amount: BigInt(Math.round(amount * 100)), // cents
+        amount: BigInt(Math.round(Number(amount) * 100)), // must be whole cents
         currency: 'USD'
       },
       locationId: process.env.SQUARE_LOCATION_ID || '',
